@@ -1,0 +1,42 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 545006460792.dkr.ecr.eu-central-1.amazonaws.com
+      - REPOSITORY_NAME=xpertell_frontend
+      # - IMAGE_TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - IMAGE_TAG="$BUILD_ENV-$(date +%Y%m%d%H%M%S)-$CODEBUILD_RESOLVED_SOURCE_VERSION"
+      - echo $IMAGE_TAG
+      - echo "NEXT_PUBLIC_API_BASE_URL=$API_BASE_URL" > apps/xpertell/.env
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t 545006460792.dkr.ecr.eu-central-1.amazonaws.com/$REPOSITORY_NAME:$IMAGE_TAG -f Dockerfile .
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image to ECR...
+      - docker push 545006460792.dkr.ecr.eu-central-1.amazonaws.com/$REPOSITORY_NAME:$IMAGE_TAG
+      - sed -i "s/\$IMAGE_TAG/$IMAGE_TAG/g" docker-compose.yml
+      - sed -i "s/\$REPOSITORY_NAME/$REPOSITORY_NAME/g" docker-compose.yml
+      - echo "CODEBUILD_BUILD_ID=${CODEBUILD_BUILD_ID}" > .frontend.env
+      - echo "CODEBUILD_BUILD_NUMBER=${CODEBUILD_BUILD_NUMBER}" >> .frontend.env
+      - echo "CODEBUILD_PROJECT_NAME=${CODEBUILD_PROJECT_NAME}" >> .frontend.env
+      - echo "CODEBUILD_SOURCE_VERSIONE=${CODEBUILD_SOURCE_VERSION}" >> .frontend.env
+      - echo "CODEBUILD_RESOLVED_SOURCE_VERSION=${CODEBUILD_RESOLVED_SOURCE_VERSION}" >> .frontend.env
+      - echo "CODEBUILD_SOURCE_REPO_URL=${CODEBUILD_SOURCE_REPO_URL}" >> .frontend.env
+      - echo "REPOSITORY_NAME=xpertell_frontend" >> .frontend.env
+      - echo "IMAGE_TAG=${IMAGE_TAG}" >> .frontend.env
+      - mkdir -p deployment
+      - mv .frontend.env deployment/
+      - echo "Build phase complete"
+artifacts:
+  files:
+    - 'deployment/.frontend.env'
+    - 'docker-compose.yml'
+    - 'scripts/*'
+    - 'appspec.yml'
+    - 'buildspec.yml'

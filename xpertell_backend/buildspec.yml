@@ -1,0 +1,128 @@
+Version: 0.2
+
+env:
+  parameter-store:
+    APP_NAME: "/backend/${BUILD_ENV}/APP_NAME"
+    APP_ENV: "/backend/${BUILD_ENV}/APP_ENV"
+    APP_KEY: "/backend/${BUILD_ENV}/APP_KEY"
+    APP_DEBUG: "/backend/${BUILD_ENV}/APP_DEBUG"
+    APP_URL: "/backend/${BUILD_ENV}/APP_URL"
+    CLIENT_URL: "/backend/${BUILD_ENV}/CLIENT_URL"
+    BROADCAST_DRIVER: "/backend/${BUILD_ENV}/BROADCAST_DRIVER"
+    CACHE_DRIVER: "/backend/${BUILD_ENV}/CACHE_DRIVER"
+    FILESYSTEM_DISK: "/backend/${BUILD_ENV}/FILESYSTEM_DISK"
+    QUEUE_CONNECTION: "/backend/${BUILD_ENV}/QUEUE_CONNECTION"
+    SESSION_DRIVER: "/backend/${BUILD_ENV}/SESSION_DRIVER"
+    SESSION_LIFETIME: "/backend/${BUILD_ENV}/SESSION_LIFETIME"
+    MAIL_MAILER: "/backend/${BUILD_ENV}/MAIL_MAILER"
+    TELESCOPE_ENABLED: "/backend/${BUILD_ENV}/TELESCOPE_ENABLED"
+    SERVER_TIMING_ENABLED: "/backend/${BUILD_ENV}/SERVER_TIMING_ENABLED"
+    NOVA_LICENSE_KEY: "/backend/${BUILD_ENV}/NOVA_LICENSE_KEY"
+    NOVA_EMAIL: "/backend/${BUILD_ENV}/NOVA_EMAIL"
+    OCTANE_SERVER: "/backend/${BUILD_ENV}/OCTANE_SERVER"
+    DB_CONNECTION: "/backend/${BUILD_ENV}/DB_CONNECTION"
+    DB_HOST: "/backend/${BUILD_ENV}/DB_HOST"
+    DB_PORT: "/backend/${BUILD_ENV}/DB_PORT"
+    DB_DATABASE: "/backend/${BUILD_ENV}/DB_DATABASE"
+    DB_USERNAME: "/backend/${BUILD_ENV}/DB_USERNAME"
+    DB_PASSWORD: "/backend/${BUILD_ENV}/DB_PASSWORD"
+    DB_ROOT_PASSWORD: "/backend/${BUILD_ENV}/DB_ROOT_PASSWORD"
+    REDIS_HOST: "/backend/${BUILD_ENV}/REDIS_HOST"
+    REDIS_PASSWORD: "/backend/${BUILD_ENV}/REDIS_PASSWORD"
+    REDIS_PORT: "/backend/${BUILD_ENV}/REDIS_PORT"
+    MAIL_HOST: "/backend/${BUILD_ENV}/MAIL_HOST"
+    MAIL_PORT: "/backend/${BUILD_ENV}/MAIL_PORT"
+    MAIL_USERNAME: "/backend/${BUILD_ENV}/MAIL_USERNAME"
+    MAIL_PASSWORD: "/backend/${BUILD_ENV}/MAIL_PASSWORD"
+    MAIL_ENCRYPTION: "/backend/${BUILD_ENV}/MAIL_ENCRYPTION"
+    MAIL_FROM_ADDRESS: "/backend/${BUILD_ENV}/MAIL_FROM_ADDRESS"
+    MAIL_FROM_NAME: "/backend/${BUILD_ENV}/MAIL_FROM_NAME"
+    S3_AWS_ACCESS_KEY_ID: "/backend/${BUILD_ENV}/S3_AWS_ACCESS_KEY_ID"
+    S3_AWS_SECRET_ACCESS_KEY: "/backend/${BUILD_ENV}/S3_AWS_SECRET_ACCESS_KEY"
+    S3_AWS_DEFAULT_REGION: "/backend/${BUILD_ENV}/S3_AWS_DEFAULT_REGION"
+    S3_AWS_BUCKET: "/backend/${BUILD_ENV}/S3_AWS_BUCKET"
+    S3_AWS_ENDPOINT: "/backend/${BUILD_ENV}/S3_AWS_ENDPOINT"
+    S3_AWS_URL: "/backend/${BUILD_ENV}/S3_AWS_URL"
+    S3_AWS_USE_PATH_STYLE_ENDPOINT: "/backend/${BUILD_ENV}/S3_AWS_USE_PATH_STYLE_ENDPOINT"
+    S3_AWS_USE_SSL: "/backend/${BUILD_ENV}/S3_AWS_USE_SSL"
+    S3_AWS_SKIP_SSL_VERIFICATION: "/backend/${BUILD_ENV}/S3_AWS_SKIP_SSL_VERIFICATION"
+    SANCTUM_TOKEN_EXPIRATION: "/backend/${BUILD_ENV}/SANCTUM_TOKEN_EXPIRATION"
+    JWT_SECRET: "/backend/${BUILD_ENV}/JWT_SECRET"
+    GOOGLE_CLIENT_ID: "/backend/${BUILD_ENV}/GOOGLE_CLIENT_ID"
+    GOOGLE_CLIENT_SECRET: "/backend/${BUILD_ENV}/GOOGLE_CLIENT_SECRET"
+    GOOGLE_REDIRECT_URI: "/backend/${BUILD_ENV}/GOOGLE_REDIRECT_URI"
+    STRIPE_PUBLISHABLE_KEY: "/backend/${BUILD_ENV}/STRIPE_PUBLISHABLE_KEY"
+    STRIPE_PRIVATE_KEY: "/backend/${BUILD_ENV}/STRIPE_PRIVATE_KEY"
+    STRIPE_ENDPOINT_SECRET: "/backend/${BUILD_ENV}/STRIPE_ENDPOINT_SECRET"
+    APP_FEE_TYPE: "/backend/${BUILD_ENV}/APP_FEE_TYPE"
+    APP_FEE_AMOUNT: "/backend/${BUILD_ENV}/APP_FEE_AMOUNT"
+    CDN_PUBLIC_URL: "/backend/${BUILD_ENV}/CDN_PUBLIC_URL"
+    SENTRY_LARAVEL_DSN: "/backend/${BUILD_ENV}/SENTRY_LARAVEL_DSN"
+    SENTRY_TRACES_SAMPLE_RATE: "/backend/${BUILD_ENV}/SENTRY_TRACES_SAMPLE_RATE"
+    PLATFORM_WALLET_USER_ID: "/backend/${BUILD_ENV}/PLATFORM_WALLET_USER_ID"
+    EVENT_PROJECTOR_QUEUE_NAME: "/backend/${BUILD_ENV}/EVENT_PROJECTOR_QUEUE_NAME"
+    STRIPE_FIXED_FEE_AMOUNT: "/backend/${BUILD_ENV}/STRIPE_FIXED_FEE_AMOUNT"
+    STRIPE_COMMISSION_AMOUNT: "/backend/${BUILD_ENV}/STRIPE_COMMISSION_AMOUNT"
+    VAT_AMOUNT: "/backend/${BUILD_ENV}/VAT_AMOUNT"
+    GOOGLE_PLAY_ANDROID_PACKAGE_NAME: "/backend/${BUILD_ENV}/GOOGLE_PLAY_ANDROID_PACKAGE_NAME"
+    FCM_PROJECT_ID: "/backend/${BUILD_ENV}/FCM_PROJECT_ID"
+    GA_MEASUREMENT_ID: "/backend/${BUILD_ENV}/GA_MEASUREMENT_ID"
+    GA_API_SECRET: "/backend/${BUILD_ENV}/GA_API_SECRET"
+    CAFE_BAZZAR_API_KEY: "/backend/${BUILD_ENV}/CAFE_BAZZAR_API_KEY"
+    CAFE_BAZZAR_DESTINATION: "/backend/${BUILD_ENV}/CAFE_BAZZAR_DESTINATION"
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 545006460792.dkr.ecr.eu-central-1.amazonaws.com
+      - REPOSITORY_NAME=xpertell_backend
+      #      - IMAGE_TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - IMAGE_TAG="$BUILD_ENV-$(date +%Y%m%d%H%M%S)-$CODEBUILD_RESOLVED_SOURCE_VERSION"
+      - echo $IMAGE_TAG
+      - echo "Granting execute permissions to update_env.sh"
+      - chmod +x scripts/update_env.sh
+      - echo "Preparing environment"
+      - ./scripts/update_env.sh
+      - mv ./public/robots.${BUILD_ENV}.txt ./public/robots.txt
+      - echo "Retrieving Google Service Account credentials from AWS Secrets Manager..."
+      - export GOOGLE_SERVICE_ACCOUNT_JSON=$(aws secretsmanager get-secret-value --secret-id xpertell/google-service-account-json --query SecretString --output text)
+      - echo $GOOGLE_SERVICE_ACCOUNT_JSON > ./storage/app/google-service-account.json
+      - echo "Retrieving FCM Service Account credentials from AWS Secrets Manager..."
+      - export FCM_SERVICE_ACCOUNT_JSON=$(aws secretsmanager get-secret-value --secret-id xpertell/fcm-service-account-json-2 --query SecretString --output text)
+      - echo $FCM_SERVICE_ACCOUNT_JSON > ./storage/app/fcm-service-account.json
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t 545006460792.dkr.ecr.eu-central-1.amazonaws.com/$REPOSITORY_NAME:$IMAGE_TAG --build-arg NOVA_LICENSE_KEY=$NOVA_LICENSE_KEY  --build-arg NOVA_EMAIL=$NOVA_EMAIL -f docker/php/Dockerfile .
+      #- docker tag $REPOSITORY_NAME:$IMAGE_TAG YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/$REPOSITORY_NAME:$IMAGE_TAG
+      - sed -i "s/\$IMAGE_TAG/$IMAGE_TAG/g" docker-compose.yml
+      - sed -i "s/\$REPOSITORY_NAME/$REPOSITORY_NAME/g" docker-compose.yml
+      - echo "CODEBUILD_BUILD_ID=${CODEBUILD_BUILD_ID}" > .backend.env
+      - echo "CODEBUILD_BUILD_NUMBER=${CODEBUILD_BUILD_NUMBER}" >> .backend.env
+      - echo "CODEBUILD_PROJECT_NAME=${CODEBUILD_PROJECT_NAME}" >> .backend.env
+      - echo "CODEBUILD_SOURCE_VERSIONE=${CODEBUILD_SOURCE_VERSION}" >> .backend.env
+      - echo "CODEBUILD_RESOLVED_SOURCE_VERSION=${CODEBUILD_RESOLVED_SOURCE_VERSION}" >> .backend.env
+      - echo "CODEBUILD_SOURCE_REPO_URL=${CODEBUILD_SOURCE_REPO_URL}" >> .backend.env
+      - echo "REPOSITORY_NAME=xpertell_backend" >> .backend.env
+      - echo "IMAGE_TAG=${IMAGE_TAG}" >> .backend.env
+      - mkdir -p deployment
+      - mv .backend.env deployment/
+      - echo "Build phase complete"
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image to ECR...
+      - docker push 545006460792.dkr.ecr.eu-central-1.amazonaws.com/$REPOSITORY_NAME:$IMAGE_TAG
+artifacts:
+  files:
+    - 'deployment/.backend.env'
+    - 'docker-compose.yml'
+    - 'scripts/*'
+    - 'appspec.yml'
+    - 'buildspec.yml'
+    - 'docker/**/*'
+    - 'public/robots.*'
+    - 'public/.well-known/**/*'
+  discard-paths: no

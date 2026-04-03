@@ -1,0 +1,39 @@
+FROM php:8.2.19-fpm
+
+ARG DEBIAN_FRONTEND
+
+WORKDIR /var/www/
+
+RUN apt-get -o Acquire::Check-Valid-Until=false update && apt-get install -y \
+    libicu-dev \
+#    libjudy-dev \
+    zlib1g-dev \
+    libzip-dev \
+    supervisor \
+    libonig-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libssl-dev \
+    libmagickwand-dev \
+    curl \
+    zip \
+    git \
+    unzip
+
+RUN docker-php-ext-configure gd --with-jpeg
+
+RUN docker-php-ext-install gettext intl zip pdo_mysql pcntl bcmath exif mbstring gd
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+RUN pecl channel-update pecl.php.net \
+    && pecl install redis && docker-php-ext-enable redis \
+    && pecl install excimer && docker-php-ext-enable excimer \
+#    && JUDY_DIR=$(brew --prefix traildb/judy/judy) pecl install memprof && docker-php-ext-enable memprof \
+    && yes '' | pecl install imagick && docker-php-ext-enable imagick \
+    && docker-php-ext-install sockets \
+    && apt-get autoremove --purge -y && apt-get autoclean -y && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/* /var/tmp/*
+
+EXPOSE 9000

@@ -1,0 +1,37 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.xpertell.app.twa",
+            "sha256_cert_fingerprints": [
+                "69:76:E4:6F:1A:EF:AD:A8:33:3A:09:AE:B7:48:39:C0:7C:DD:6C:BC:34:E2:EE:EA:1A:B9:30:03:81:39:50:6D",
+                "DE:B2:A1:19:87:D2:7E:91:2F:20:B6:10:77:A2:0A:F7:EF:ED:62:A5:DA:52:81:94:9D:EE:58:BF:66:03:78:67"
+            ]
+        }
+    },
+    {
+        "relation": [
+            "delegate_permission/common.use_as_origin"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.xpertell.app.twa",
+            "sha256_cert_fingerprints": [
+                "69:76:E4:6F:1A:EF:AD:A8:33:3A:09:AE:B7:48:39:C0:7C:DD:6C:BC:34:E2:EE:EA:1A:B9:30:03:81:39:50:6D",
+                "DE:B2:A1:19:87:D2:7E:91:2F:20:B6:10:77:A2:0A:F7:EF:ED:62:A5:DA:52:81:94:9D:EE:58:BF:66:03:78:67"
+            ]
+        }
+    },
+    {
+        "relation": [
+            "check_validation"
+        ],
+        "target": {
+            "namespace": "cafebazaar_twa",
+            "package_name": "com.xpertell.app.twa"
+        }
+    }
+]

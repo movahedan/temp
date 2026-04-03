@@ -1,0 +1,15 @@
+version: "3.1"
+
+networks:
+  xpertell:
+    external: true
+
+services:
+  web:
+    container_name: "xpertell_web"
+    image: 545006460792.dkr.ecr.eu-central-1.amazonaws.com/xpertell_frontend:production-20251130085245-d85f646610851fd1625017d9e6a27778e4d3ac6d
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - xpertell
